@@ -100,7 +100,7 @@ const setPoint = ({ lat, lng }, pointType) => {
 window.onload = initMap;
 
 const getCarDirection = async () => {
-  const REST_API_KEY = config.restApiKey
+  const REST_API_KEY = restApiKey
   const url = 'https://apis-navi.kakaomobility.com/v1/directions';
   if (!origin || !destination) {
     console.log('출발지 또는 목적지가 설정되지 않았습니다.');
