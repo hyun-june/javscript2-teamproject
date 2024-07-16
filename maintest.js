@@ -1,168 +1,117 @@
-let map;
-let center = { lat: 33.452613, lng: 126.570888 };
-let marker;
-let origin = '';
-let destination = '';
+// Kakao Maps API가 제대로 로드되었는지 확인하기 위해 먼저 맵을 설정합니다.
+var mapContainer = document.getElementById('map'); // 지도를 표시할 div 
+var mapOption = {
+    center: new kakao.maps.LatLng(37.3595704, 127.105399), // 지도의 중심좌표
+    level: 10 // 지도의 확대 레벨
+};  
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-const initMap = () => {
-    const mapContainer = document.getElementById("map");
+// 출발지와 도착지 좌표 설정
+var sx = 126.93737555322481;
+var sy = 37.55525165729346;
+var ex = 126.88265238619182;
+var ey = 37.481440035175375;
 
-    const mapOptions = {
-        center: new kakao.maps.LatLng(center.lat, center.lng),
-        level: 3
-    };
+function searchPubTransPathAJAX() {
+    var xhr = new XMLHttpRequest();
+    var url = "https://api.odsay.com/v1/api/searchPubTransPathT?SX=" + sx + "&SY=" + sy + "&EX=" + ex + "&EY=" + ey + "&apiKey=dKWKju9UFpHEB%2BlOkdxxqA";
 
-    map = new kakao.maps.Map(mapContainer, mapOptions);
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+        console.log("Ready state:", xhr.readyState);
+        console.log("Status:", xhr.status);
 
-    var mapTypeControl = new kakao.maps.MapTypeControl();
-    map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-    var zoomControl = new kakao.maps.ZoomControl();
-    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-
-    kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
-        const latlng = mouseEvent.latLng;
-
-        if (marker) {
-            marker.setMap(null);
-        }
-
-        marker = new kakao.maps.Marker({ position: latlng });
-        marker.setMap(map);
-
-        const message = '클릭한 위치의 위도는 ' + latlng.getLat() + ' 이고, 경도는 ' + latlng.getLng() + ' 입니다';
-        const resultDiv = document.getElementById('clickLatlng');
-        resultDiv.innerHTML = message;
-    });
-
-    const startPointButton = document.getElementById("startPointButton");
-    startPointButton.addEventListener("click", () => setPoint({ lat: 36.67369107400314, lng: 127.48819284994991 }, 'startPoint'));
-
-    const endPointButton = document.getElementById("endPointButton");
-    endPointButton.addEventListener("click", () => setPoint({ lat: 36.665619618444524, lng: 127.48975258952777 }, 'endPoint'));
-
-    const changeCenterButton = document.getElementById("changeCenterButton");
-    changeCenterButton.addEventListener("click", () => changeCenter(center));
-};
-
-const getSuccess = position => {
-    center = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-    };
-    console.log(`현재 위치: ${center.lat}, ${center.lng}`);
-};
-
-const getError = () => {
-    console.log("Geolocation API 에러");
-};
-
-window.navigator.geolocation.watchPosition(getSuccess, getError);
-
-const changeCenter = ({ lat, lng }) => {
-    const moveLatLon = new kakao.maps.LatLng(lat, lng);
-    map.panTo(moveLatLon);
-};
-
-const setPoint = ({ lat, lng }, pointType) => {
-    changeCenter({ lat, lng });
-    const newMarker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(lat, lng) });
-
-    if (pointType === 'startPoint') {
-        origin = `${lng},${lat}`;
-    } else if (pointType === 'endPoint') {
-        destination = `${lng},${lat}`;
-    }
-    newMarker.setMap(map);
-
-    if (origin && destination) {
-        getCarDirection();
-    }
-};
-
-window.onload = initMap;
-
-const getCarDirection = async () => {
-    const url = 'https://apis-navi.kakaomobility.com/v1/directions';
-
-    if (!origin || !destination) {
-        console.log('출발지 또는 목적지가 설정되지 않았습니다.');
-        return;
-    }
-
-    const queryParams = new URLSearchParams({
-        origin,
-        destination,
-        waypoints: '',
-        priority: 'RECOMMEND',
-        car_fuel: 'GASOLINE',
-        car_hipass: false,
-        alternatives: false,
-        road_details: false
-    });
-
-    const headers = {
-        'Authorization': `KakaoAK ${config.restApiKey}`
-    };
-
-    try {
-        const response = await fetch(`${url}?${queryParams.toString()}`, {
-            method: 'GET',
-            headers: headers
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("data:", data);
-        console.log("차량거리", data.routes[0].summary.distance);
-        console.log("차량(초)", data.routes[0].summary.duration);
-        console.log("TAXI", data.routes[0].summary.fare.taxi);
-
-        let between = data.routes[0].summary.distance; // 거리
-        let time = data.routes[0].summary.duration; // 시간(초)
-        let taxi = data.routes[0].summary.fare.taxi; // 택시 요금
-        let walk = Math.ceil(((between * 0.001) / 4) * 60); // 도보 시간(분)
-        const distanceDiv = document.getElementById("between-distance");
-        distanceDiv.innerHTML = between + 'm ' + time + '초 ' + taxi + "원 " + walk + "분";
-    } catch (error) {
-        console.error('Error:', error);
-    }
-};
-
-let overlay = document.querySelector(".overlay");
-let sideNav = document.getElementById("mainSidenav");
-let dropdown = document.querySelector(".dropdown_bar");
-let dropdownContent = document.querySelector(".dropdown_content");
-let drop_icon1 = document.querySelector(".drop_icon1");
-let drop_icon2 = document.querySelector(".drop_icon2");
-
-const openNav = () => {
-    sideNav.style.width = "250px";
-    overlay.style.display = "block";
-    overlay.style.opacity = 0;
-
-    var fadeEffect = setInterval(function () {
-        if (!overlay.style.opacity) {
-            overlay.style.opacity = 0;
-        }
-        if (overlay.style.opacity < 0.5) {
-            overlay.style.opacity = parseFloat(overlay.style.opacity) + 0.1;
-        } else {
-            clearInterval(fadeEffect);
-        }
-    }, 50);
-
-    overlay.addEventListener("click", function () {
-        sideNav.style.width = "0px";
-        var fadeOutEffect = setInterval(function () {
-            if (overlay.style.opacity > 0) {
-                overlay.style.opacity -= 0.1;
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                console.log("Response received:", xhr.responseText);
+                var response = JSON.parse(xhr.responseText);
+                if (response.result && response.result.path && response.result.path.length > 0) {
+                    var mapObj = response.result.path[0].info.mapObj;
+                    callMapObjApiAJAX(mapObj);
+                } else {
+                    console.error("No path found");
+                }
+            } else if (xhr.status === 500) {
+                console.error("Internal Server Error (500):", xhr.responseText);
             } else {
-                clearInterval(fadeOutEffect);
-                overlay.style.display = "none";
+                console.error("Error: Status code", xhr.status, xhr.responseText);
             }
-        }, 50);
+        }
+    };
+
+    xhr.onerror = function() {
+        console.error("Request failed");
+    };
+    
+    xhr.send();
+}
+
+// 길찾기 API 호출
+searchPubTransPathAJAX();
+
+function callMapObjApiAJAX(mapObj){
+    var xhr = new XMLHttpRequest();
+    var url = "https://api.odsay.com/v1/api/loadLane?mapObject=0:0@" + mapObj + "&apiKey=dKWKju9UFpHEB%2BlOkdxxqA";
+
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var resultJsonData = JSON.parse(xhr.responseText);
+            drawkakaoMarker(sx, sy); // 출발지 마커 표시
+            drawkakaoMarker(ex, ey); // 도착지 마커 표시
+            drawkakaoPolyLine(resultJsonData); // 노선그래픽데이터 지도 위 표시
+            
+            if (resultJsonData.result.boundary) {
+                var boundary = new kakao.maps.LatLngBounds(
+                    new kakao.maps.LatLng(resultJsonData.result.boundary.top, resultJsonData.result.boundary.left),
+                    new kakao.maps.LatLng(resultJsonData.result.boundary.bottom, resultJsonData.result.boundary.right)
+                );
+            }
+        } else if (xhr.readyState === 4) {
+            console.error("Error: Status code", xhr.status, xhr.responseText);
+        }
+    };
+
+    xhr.onerror = function() {
+        console.error("Request failed");
+    };
+    
+    xhr.send();
+}
+
+// 지도 위 마커 표시해주는 함수
+function drawkakaoMarker(x, y) {
+    var marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(y, x),
+        map: map
     });
-};
+}
+
+// 노선그래픽 데이터를 이용하여 지도 위 폴리라인 그려주는 함수
+function drawkakaoPolyLine(data) {
+    var lineArray;
+    for (var i = 0; i < data.result.lane.length; i++) {
+        for (var j = 0; j < data.result.lane[i].section.length; j++) {
+            lineArray = [];
+            for (var k = 0; k < data.result.lane[i].section[j].graphPos.length; k++) {
+                lineArray.push(new kakao.maps.LatLng(data.result.lane[i].section[j].graphPos[k].y, data.result.lane[i].section[j].graphPos[k].x));
+            }
+            
+            var color;
+            if (data.result.lane[i].type === 1) {
+                color = '#003499'; // 지하철 1호선
+            } else if (data.result.lane[i].type === 2) {
+                color = '#37b42d'; // 지하철 2호선
+            } else {
+                color = '#FF0000'; // 기본 색상
+            }
+
+            var polyline = new kakao.maps.Polyline({
+                map: map,
+                path: lineArray,
+                strokeWeight: 3,
+                strokeColor: color
+            });
+        }
+    }
+}

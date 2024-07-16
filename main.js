@@ -6,7 +6,6 @@ let endMarker = null;
 let origin = '';
 let destination = '';
 
-
 // 지도를 렌더링하는 함수
 const initMap = () => {
   const mapContainer = document.getElementById("map");
@@ -20,9 +19,9 @@ const initMap = () => {
   // 지도 객체 생성
   map = new kakao.maps.Map(mapContainer, mapOptions);
 
-  var mapTypeControl = new kakao.maps.MapTypeControl();
+  let mapTypeControl = new kakao.maps.MapTypeControl();
   map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-  var zoomControl = new kakao.maps.ZoomControl();
+  let zoomControl = new kakao.maps.ZoomControl();
   map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
   kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
@@ -141,6 +140,24 @@ const getCarDirection = async () => {
     let mapWalk = Math.round(((mapDistance * 0.001) / 4) * 60); // 도보 시간 계산
     const distanceDiv = document.getElementById("between-distance");
     distanceDiv.innerHTML = `${mapDistance}m ${mapCarTime}분 ${mapTaxiFare}원 ${mapWalk}분`;
+
+    const linePath = [];
+    data.routes[0].sections[0].roads.forEach(router => {
+      router.vertexes.forEach((vertex, index) => {
+         // lng =x, lat=y
+        if (index % 2 === 0) {
+          linePath.push(new kakao.maps.LatLng(router.vertexes[index + 1], router.vertexes[index]));
+        }
+      });
+    });
+    const polyline = new kakao.maps.Polyline({
+      path: linePath,
+      strokeWeight: 5,
+      strokeColor: '#000000',
+      strokeOpacity: 0.7,
+      strokeStyle: 'solid'
+    }); 
+    polyline.setMap(map);
   } catch (error) {
     console.error('Error:', error);
   }
