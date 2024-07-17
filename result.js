@@ -9,6 +9,7 @@ let markers = [];
 let bounds = new kakao.maps.LatLngBounds();
 const ps = new kakao.maps.services.Places();
 const infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+const geocoder = new kakao.maps.services.Geocoder(); 
 
 const initMap = () => {
   const mapContainer = document.getElementById("map");
@@ -41,52 +42,28 @@ const initMap = () => {
     resultDiv.innerHTML = message;
   });
 
-  const changeCenterButton = document.getElementById("changeCenterButton");
-  changeCenterButton.addEventListener("click", () => changeCenter(center));
+// 맵 초기화 및 설정
+navigator.geolocation.getCurrentPosition((position) => {
+  currentMap(position);
+});
+
+// 현재 위치를 중심으로 지도 중심 변경 & 주소 & 현재 위치 날씨
+const currentMap=(position)=> {
+  const lat = position.coords.latitude; // 위도
+  const lng = position.coords.longitude; // 경도
+  console.log("현재 위치 좌표", lng, lat);
+
+  map.setCenter(new kakao.maps.LatLng(lat, lng)); // 지도 중심
+}
 };
 
+// 출발지, 도착지 검색
 const handleSearch = () =>{
   searchPlaces('search-start', placesSearchCallback);
 }
 
 const searchHandle = () => {
   searchPlaces('search-end', placesSearchCallback);
-}
-
-const searchPlaces = (inputId, callback) => {
-  const keyword = document.getElementById(inputId).value.trim();
-
-  if (!keyword) {
-    alert('키워드를 입력해주세요!');
-    return false;
-  }
-
-  ps.keywordSearch(keyword, callback);
-}
-
-const placesSearchCallback = (data, status) => {
-  if (status === kakao.maps.services.Status.OK) {
-    removeMarkers();
-    bounds = new kakao.maps.LatLngBounds();
-
-    data.forEach(place => {
-      const marker = new kakao.maps.Marker({
-        map: map,
-        position: new kakao.maps.LatLng(place.y, place.x)
-      });
-
-      kakao.maps.event.addListener(marker, 'click', function () {
-        const content = `<div style="padding:5px;font-size:12px;">${place.place_name}<br><button onclick="selectLocation(${place.y}, ${place.x})">위치 선택하기</button></div>`;
-        infowindow.setContent(content);
-        infowindow.open(map, marker);
-      });
-
-      markers.push(marker);
-      bounds.extend(new kakao.maps.LatLng(place.y, place.x));
-    });
-
-    map.setBounds(bounds);
-  }
 }
 
 const selectLocation = (lat, lng) => {
@@ -112,6 +89,45 @@ const selectLocation = (lat, lng) => {
   infowindow.close();
 }
 
+// 입력된 키워드로 장소 검색
+const searchPlaces = (inputId, callback) => {
+  const keyword = document.getElementById(inputId).value.trim();
+
+  if (!keyword) {
+    alert('키워드를 입력해주세요!');
+    return false;
+  }
+
+  ps.keywordSearch(keyword, callback);
+}
+
+// 장소 검색 결과를 처리하는 함수
+const placesSearchCallback = (data, status) => {
+  if (status === kakao.maps.services.Status.OK) {
+    removeMarkers();
+    bounds = new kakao.maps.LatLngBounds();
+
+    data.forEach(place => {
+      const marker = new kakao.maps.Marker({
+        map: map,
+        position: new kakao.maps.LatLng(place.y, place.x)
+      });
+
+      kakao.maps.event.addListener(marker, 'click', function () {
+        const content = `<div style="padding:5px;font-size:12px;">${place.place_name}<br><button onclick="selectLocation(${place.y}, ${place.x})">위치 선택하기</button></div>`;
+        infowindow.setContent(content);
+        infowindow.open(map, marker);
+      });
+
+      markers.push(marker);
+      bounds.extend(new kakao.maps.LatLng(place.y, place.x));
+    });
+
+    map.setBounds(bounds);
+  }
+}
+
+// 마커 관련 함수
 const createMarker = (coords, elementId, label) => {
   const { lat, lng } = coords;
   const marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(lat, lng) });
@@ -126,6 +142,7 @@ const removeMarkers = () => {
   markers = [];
 }
 
+// 출발지, 도착지 사이의 차량 경로
 const getCarDirection = async () => {
   const REST_API_KEY = restApiKey;
   const url = 'https://apis-navi.kakaomobility.com/v1/directions';
@@ -163,13 +180,26 @@ const getCarDirection = async () => {
     console.log("차량(초)", mapInfo.duration);
     console.log("TAXI", mapInfo.fare.taxi);
 
-    const mapDistance = mapInfo.distance;
-    const mapCarTime = Math.round(mapInfo.duration / 60);
-    const mapTaxiFare = mapInfo.fare.taxi;
-    const mapWalk = Math.round(((mapDistance * 0.001) / 4) * 60);
-    const distanceDiv = document.getElementById("between-distance");
-    distanceDiv.innerHTML = `${mapDistance}m ${mapCarTime}분 ${mapTaxiFare}원 ${mapWalk}분`;
+  // 맵 관련 계산
+    let mapDistance = mapInfo.distance;
+    const distanceValue = mapDistance;
+    mapDistance = mapDistance > 999 ? (Math.round(mapDistance * 0.001 * 100) / 100) + "km" : mapDistance + "m";
 
+    const mapWalkValue = Math.round(((distanceValue * 0.001) / 4) * 60);
+    const mapWalk = mapWalkValue > 59 ? `${Math.floor(mapWalkValue/60)}시간${mapWalkValue % 60}분`
+    : `${mapWalkValue}분`;
+    
+    let mapCarTime = Math.round(mapInfo.duration / 60);
+    mapCarTime = mapCarTime > 59 ? `${Math.floor(mapCarTime/60)}시간${mapCarTime % 60}분`
+    : `${mapCarTime}분`;
+
+    const mapTaxiFareValue = mapInfo.fare.taxi;
+    const mapTaxiFare = new Intl.NumberFormat().format(mapTaxiFareValue);
+
+    const distanceDiv = document.getElementById("between-distance");
+    distanceDiv.innerHTML = `${mapDistance} ${mapCarTime} ${mapTaxiFare}원 ${mapWalk}`;
+
+    // 폴리라인 좌표 찾는 함수
     const linePath = [];
     data.routes[0].sections[0].roads.forEach(router => {
       router.vertexes.forEach((vertex, index) => {
@@ -179,6 +209,7 @@ const getCarDirection = async () => {
       });
     });
 
+    // 폴리 라인 그리는 함수
     const polyline = new kakao.maps.Polyline({
       path: linePath,
       strokeWeight: 5,
@@ -193,6 +224,7 @@ const getCarDirection = async () => {
   }
 };
 
+// sideNav, overLay
 const overlay = document.querySelector(".overlay");
 const sideNav = document.getElementById("mainSidenav");
 const dropdown = document.querySelector(".dropdown_bar");
