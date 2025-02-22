@@ -1,173 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoWeather</title>
-    <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <section class="mainContainer">
-        <div class="row mainInner">
-            <div class="col-lg-2">
-                <!-- <span class="openNav" onclick="handleSearch()">&#9776;</span> -->
-                <nav>
-                  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false"><i class="fa-solid fa-cloud"></i></button>
-                    <button class="nav-link" id="nav-liked-tab" data-bs-toggle="tab" data-bs-target="#nav-liked" type="button" role="tab" aria-controls="nav-liked" aria-selected="false"><i class="fa-solid fa-heart"></i></button>
-                    <button class="nav-link"  onclick="openNav()" id="nav-contact-tab" type="button" aria-selected="false"><i class="fa-solid fa-gear"></i></button>
-                  </div>
-                </nav>
-                <div class="tab-content" id="nav-tabContent">
-                  <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-                    <div class="buttons">
-                      <!-- <div id="clickLatlng"></div> -->
-                      <div class="search-container">
-                        <button id="delete-button" onclick="removeAll()"><i class="fa-solid fa-trash-can"></i></button>
-                          <div>
-                            <input class="search-box search" type="text" id="search-start" placeholder="출발지..." onkeypress="handleSearch('start')">
-                            <span class="search-icon" onclick="handleSearch()">🔍</span>
-                            <button type="button" id="start-mic-start" class="mic-button"><i class="fa-solid fa-microphone"></i></button>
-                          </div>
-                          <div>
-                            <input class="search-box search" type="text" id="search-end" placeholder="도착지..." onkeypress="searchHandle('end')">
-                            <span class="search-icon" onclick="searchHandle()">🔍</span>
-                            <button type="button" id="start-mic-end" class="mic-button"><i class="fa-solid fa-microphone"></i></button>
-                          </div>
-                        </div>
-                      <div class="location-info">
-                        <div id="start-info">출발지 :</div>
-                        <div id="end-info">도착지 :</div>
-                      </div>
-                      <div id="between-distance">
-
-                      </div>
-                      <div id="weather"></div>
-                  </div>
-                  </div>
-                  <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-                    <div class="weatherContainer">
-                      <h1>현재 날씨</h1>
-                      <form id="search-form">
-                          <input type="text" id="city-input" placeholder="도시를 입력하세요!" required>
-                          <button type="submit">🔍</button>
-                      </form>
-                      <div id="weatherBox"></div>
-                  </div>
-                  </div>
-                  <div class="tab-pane fade" id="nav-liked" role="tabpanel" aria-labelledby="nav-liked-tab" tabindex="0">기능 추가중</div>
-                </div>
-
-            </div>
-            <div class="col-lg-10" id="map">
-              <div id="category-container">
-                <div id="category-wrapper">
-                  <ul id="category" class="category">
-                    <li id="BK9" data-order="0">
-                      <span class="category_bg"
-                        ><i class="fas fa-university"></i
-                      ></span>
-                      은행
-                    </li>
-                    <li id="MT1" data-order="1">
-                      <span class="category_bg"
-                        ><i class="fas fa-shopping-cart"></i
-                      ></span>
-                      마트
-                    </li>
-                    <li id="PM9" data-order="2">
-                      <span class="category_bg"
-                        ><i class="fas fa-prescription-bottle"></i
-                      ></span>
-                      약국
-                    </li>
-                    <li id="OL7" data-order="3">
-                      <span class="category_bg"
-                        ><i class="fas fa-gas-pump"></i
-                      ></span>
-                      주유소
-                    </li>
-                    <li id="CE7" data-order="4">
-                      <span class="category_bg"><i class="fas fa-coffee"></i></span>
-                      카페
-                    </li>
-                    <li id="CS2" data-order="5">
-                      <span class="category_bg"><i class="fas fa-store"></i></span>
-                      편의점
-                    </li>
-                    <li id="FD6" data-order="6">
-                      <span class="category_bg"
-                        ><i class="fas fa-utensils"></i></span
-                      >음식점
-                    </li>
-                    <li id="HP8" data-order="7">
-                      <span class="category_bg"
-                        ><i class="fas fa-hospital"></i></span
-                      >병원
-                    </li>
-                    <li id="AT4" data-order="8">
-                      <span class="category_bg"
-                        ><i class="fas fa-landmark"></i></span
-                      >관광지
-                    </li>
-                    <li id="AD5" data-order="9">
-                      <span class="category_bg"><i class="fas fa-hotel"></i></span
-                      >숙박
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-        </div>
-    </section>
-
-    <div id="mainSidenav" class="sidenav">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#">공지사항</a>
-        <a href="#">이벤트</a>
-        <a href="#">즐겨찾기</a>
-        <a href="#">신규장소 등록</a>
-        <a href="#">고객센터</a>
-        
-    <div class="dropdown_main">
-        <!-- 드롭다운 메뉴바 -->
-        <a class="dropdown_bar">설정
-            <svg class="drop_icon1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
-                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-            <svg class="drop_icon2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
-                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-          </a>
-    
-        <!-- 드롭다운 시 보여질 태그 -->
-        <div class="dropdown_content">
-            <a href="#"><div>· 하위 링크 1</div></a>
-            <a href="#"><div>· 하위 링크 2</div></a>
-            <a href="#"><div>· 하위 링크 3</div></a>
-        </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.css"
+      integrity="sha512-n5zPz6LZB0QV1eraRj4OOxRbsV7a12eAGfFcrJ4bBFxxAwwYDp542z5M0w24tKPEhKk2QzjjIpR5hpOjJtGGoA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="markdown-body">
+      <md-block
+        src="https://raw.githubusercontent.com/hyun-june/javscript2-teamproject/refs/heads/main/README.md"
+      >
+        <!-- README.md 로드 실패시 보이는 문구 -->
+        `README.md` was *not* found
+      </md-block>
     </div>
-
-    </div>
-    <div class="overlay"></div>
-
-  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=09dd7c8905925daabacd70380aa9a3b2&libraries=services"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  <script src="https://kit.fontawesome.com/b4957b2c73.js" crossorigin="anonymous"></script>
-  <script src="js/config.js"></script>
-  <script src="js/weather.js"></script>
-  <script src="js/main.js"></script>
-  <script>
-    kakao.maps.load(() => {
-      initMap();
-    });
-    window.onload = () => {
-      locationWeather();
-    };
-  </script>
-  <script type="text/javaScript" src="js/categorymap.js"></script>
-</body>
+  </body>
+  <script type="module" src="https://md-block.verou.me/md-block.js"></script>
 </html>
